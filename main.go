@@ -1,15 +1,20 @@
 package main
 
 import (
-	"github.com/gin-gonic/gin"
+	"os"
+
+	refill "github.com/joehewett/refill/internal"
+	"github.com/unidoc/unipdf/v3/common/license"
 )
-var Router * gin.Engine
+
+func init() {
+	err := license.SetMeteredKey(os.Getenv(`UNIDOC_LICENSE_API_KEY`))
+	if err != nil {
+		panic(err)
+	}
+}
+
 func main() {
-	r := gin.Default()
-	r.GET("/", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "Hello world!",
-		})
-	})
-	r.Run()
+	server := refill.NewAPIServer(":8080")
+	server.Run()
 }
