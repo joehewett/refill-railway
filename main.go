@@ -20,6 +20,6 @@ func init() {
 }
 
 func main() {
-	server := refill.NewAPIServer(":" + port)
+	server := refill.NewAPIServer("0.0.0.0:" + port)
 	server.Run()
 }
