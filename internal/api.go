@@ -45,6 +45,7 @@ func NewAPIServer(listenAddr string) *APIServer {
 func (s *APIServer) Run() error {
 	router := mux.NewRouter()
 
+	router.HandleFunc("/", makeHTTPHandler(s.healthCheck)).Methods("GET")
 	router.HandleFunc("/health", makeHTTPHandler(s.healthCheck)).Methods("GET")
 	router.HandleFunc("/refill", makeHTTPHandler(s.handleRefill)).Methods("GET")
 
