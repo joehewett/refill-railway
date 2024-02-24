@@ -1,13 +1,5 @@
 package internal
 
-import (
-	"os"
-	"path/filepath"
-
-	"github.com/unidoc/unipdf/v3/extractor"
-	pdfModel "github.com/unidoc/unipdf/v3/model"
-)
-
 type FileType int
 
 const (
@@ -48,55 +40,55 @@ func (p *PDF) Type() FileType {
 }
 
 func (p *PDF) Load() (string, error) {
-	// Convert the PDF bytes to a file so we can load it into unipdf
-	f, err := os.Create(filepath.Join(os.TempDir(), p.name))
-	if err != nil {
-		return "", err
-	}
-	defer f.Close()
+	// // Convert the PDF bytes to a file so we can load it into unipdf
+	// f, err := os.Create(filepath.Join(os.TempDir(), p.name))
+	// if err != nil {
+	// 	return "", err
+	// }
+	// defer f.Close()
 
-	defer func() {
-		os.Remove(f.Name())
-	}()
+	// defer func() {
+	// 	os.Remove(f.Name())
+	// }()
 
-	_, err = f.Write(p.bytes)
-	if err != nil {
-		return "", err
-	}
+	// _, err = f.Write(p.bytes)
+	// if err != nil {
+	// 	return "", err
+	// }
 
-	pdfReader, err := pdfModel.NewPdfReader(f)
-	if err != nil {
-		return "", err
-	}
+	// pdfReader, err := pdfModel.NewPdfReader(f)
+	// if err != nil {
+	// 	return "", err
+	// }
 
-	numPages, err := pdfReader.GetNumPages()
-	if err != nil {
-		return "", err
-	}
+	// numPages, err := pdfReader.GetNumPages()
+	// if err != nil {
+	// 	return "", err
+	// }
 
-	var text string
-	for i := 0; i < numPages; i++ {
-		pageNum := i + 1
+	// var text string
+	// for i := 0; i < numPages; i++ {
+	// 	pageNum := i + 1
 
-		page, err := pdfReader.GetPage(pageNum)
-		if err != nil {
-			return "", err
-		}
+	// 	page, err := pdfReader.GetPage(pageNum)
+	// 	if err != nil {
+	// 		return "", err
+	// 	}
 
-		ex, err := extractor.New(page)
-		if err != nil {
-			return "", err
-		}
+	// 	ex, err := extractor.New(page)
+	// 	if err != nil {
+	// 		return "", err
+	// 	}
 
-		pageText, err := ex.ExtractText()
-		if err != nil {
-			return "", err
-		}
+	// 	pageText, err := ex.ExtractText()
+	// 	if err != nil {
+	// 		return "", err
+	// 	}
 
-		text += pageText
-	}
+	// 	text += pageText
+	// }
 
-	return text, nil
+	return "", nil
 }
 
 type TXT struct {
