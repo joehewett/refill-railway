@@ -35,12 +35,12 @@ var (
 	model     = openai.GPT3Dot5Turbo16K0613
 )
 
-func requestFill(file File, json string, instructions string) (string, error) {
+func requestFill(file string, json string, instructions string) (string, error) {
 	// Get the actual data from the file
-	data, err := file.Load()
-	if err != nil {
-		return "", fmt.Errorf("failed to load file: %w", err)
-	}
+	// data, err := file.Load()
+	// if err != nil {
+	// 	return "", fmt.Errorf("failed to load file: %w", err)
+	// }
 
 	var messages = []openai.ChatCompletionMessage{
 		{
@@ -76,7 +76,7 @@ func requestFill(file File, json string, instructions string) (string, error) {
 		},
 		{
 			Role:    openai.ChatMessageRoleSystem,
-			Content: data,
+			Content: file,
 		},
 		{
 			Role:    openai.ChatMessageRoleSystem,

@@ -7,16 +7,22 @@ import (
 )
 
 type RefillRequest struct {
-	JSON         string `json:"json"`
-	Data         []File `json:"data"`
-	Instructions string `json:"instructions"`
+	Keys         []string `json:"json"`
+	Data         []string `json:"data"`
+	Instructions string   `json:"instructions"`
 }
 
 func doRefill(request RefillRequest) (string, error) {
-	err := json.Unmarshal([]byte(request.JSON), new((map[string]interface{})))
+	// Convert the array of strings into a JSON object where each string is a key and each value is an empty string
+	jsonSkeleton := make(map[string]interface{})
+	for _, key := range request.Keys {
+		jsonSkeleton[key] = ""
+	}
+
+	// Convert the JSON object back into a string
+	jsonStr, err := json.Marshal(jsonSkeleton)
 	if err != nil {
-		fmt.Printf("Failed to unmarshal JSON skeleton, please check your JSON is valid and try again: %s\n", err)
-		return "", err
+		return "", fmt.Errorf("failed to marshal JSON skeleton: %w", err)
 	}
 
 	startTime := time.Now()
@@ -27,7 +33,7 @@ func doRefill(request RefillRequest) (string, error) {
 	ch := make(chan string)
 
 	for _, file := range request.Data {
-		go fill(file, request.JSON, request.Instructions, ch)
+		go fill(file, string(jsonStr), request.Instructions, ch)
 	}
 
 	results := []string{}
@@ -50,7 +56,7 @@ func doRefill(request RefillRequest) (string, error) {
 	return result, nil
 }
 
-func fill(file File, jsonStr string, instructions string, ch chan string) {
+func fill(file string, jsonStr string, instructions string, ch chan string) {
 	startTime := time.Now()
 
 	fmt.Println("Requesting filled data from LM")
@@ -70,7 +76,7 @@ func fill(file File, jsonStr string, instructions string, ch chan string) {
 
 	}
 
-	resultJSON["filename"] = file.Name()
+	resultJSON["filename"] = "file.Name()"
 	bytes, err := json.MarshalIndent(resultJSON, "", "\t")
 	if err != nil {
 		ch <- fmt.Sprintf("\nFailed to marshal result for file %s: %s\n", file, err)

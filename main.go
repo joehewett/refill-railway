@@ -1,24 +1,16 @@
 package main
 
 import (
-	"os"
+	"fmt"
 
 	refill "github.com/joehewett/refill/internal"
 )
 
-var (
-	port = os.Getenv("PORT")
-)
-
-// func init() {
-// 	err := license.SetMeteredKey(os.Getenv(`UNIDOC_LICENSE_API_KEY`))
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// }
-
 func main() {
 	api := refill.NewAPIServer()
 
-	api.Run()
+	err := api.Run()
+	if err != nil {
+		fmt.Printf("API error occurred: %s\n", err)
+	}
 }

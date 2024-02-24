@@ -47,39 +47,32 @@ func NewAPIServer() *APIServer {
 
 func (s *APIServer) Run() error {
 	s.engine.GET("/", makeHTTPHandler(s.healthCheck))
-
-	// Log that we're starting the server
+	s.engine.GET("/refill", makeHTTPHandler(s.handleRefill))
 
 	port := os.Getenv("PORT")
 	fmt.Printf("Starting server on port %s\n", port)
 	return s.engine.Run()
 }
 
-// func(c *gin.Context) {
-// 		c.JSON(200, gin.H{
-// 			"message": "Hello world!",
-// 		})
-// 	}
+func (s *APIServer) handleRefill(w http.ResponseWriter, r *http.Request) error {
+	var refillRequest RefillRequest
+	err := json.NewDecoder(r.Body).Decode(&refillRequest)
+	if err != nil {
+		return fmt.Errorf("failed to decode refill request: %s", err)
+	}
 
-// func (s *APIServer) handleRefill(w http.ResponseWriter, r *http.Request) error {
-// 	var refillRequest RefillRequest
-// 	err := json.NewDecoder(r.Body).Decode(&refillRequest)
-// 	if err != nil {
-// 		return err
-// 	}
+	result, err := doRefill(refillRequest)
+	if err != nil {
+		return fmt.Errorf("an error occurred while refilling: %w", err)
+	}
 
-// 	result, err := doRefill(refillRequest)
-// 	if err != nil {
-// 		return fmt.Errorf("an error occurred while refilling: %w", err)
-// 	}
+	err = WriteJSON(w, http.StatusOK, result)
+	if err != nil {
+		return fmt.Errorf("an error occurred while writing the response: %w", err)
+	}
 
-// 	err = WriteJSON(w, http.StatusOK, result)
-// 	if err != nil {
-// 		return fmt.Errorf("an error occurred while writing the response: %w", err)
-// 	}
-
-// 	return nil
-// }
+	return nil
+}
 
 func (s *APIServer) healthCheck(w http.ResponseWriter, r *http.Request) error {
 	return WriteJSON(w, http.StatusOK, "Get your jiffies out Thomas")
