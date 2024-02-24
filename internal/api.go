@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -40,8 +42,23 @@ func WriteJSON(w http.ResponseWriter, status int, v interface{}) error {
 }
 
 func NewAPIServer() *APIServer {
+	engine := gin.Default()
+
+	// Add CORS middleware
+	engine.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"*"}, // Use your specific origin here instead of "*" for production
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		AllowOriginFunc: func(origin string) bool {
+			return origin == "http://example.com" // Specify the allowed origin
+		},
+		MaxAge: 12 * time.Hour,
+	}))
+
 	return &APIServer{
-		engine: gin.Default(),
+		engine,
 	}
 }
 
