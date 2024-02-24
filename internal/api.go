@@ -82,5 +82,5 @@ func (s *APIServer) Run() error {
 // }
 
 func (s *APIServer) healthCheck(w http.ResponseWriter, r *http.Request) error {
-	return WriteJSON(w, http.StatusOK, "API is healthy")
+	return WriteJSON(w, http.StatusOK, "Get your jiffies out Thomas")
 }
