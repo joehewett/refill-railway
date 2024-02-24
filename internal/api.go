@@ -4,22 +4,25 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 
-	"github.com/gorilla/mux"
+	"github.com/gin-gonic/gin"
 )
 
+var Router *gin.Engine
+
 type APIServer struct {
-	listenAddr string
+	engine *gin.Engine
 }
 
 type apiFunc func(w http.ResponseWriter, r *http.Request) error
 
 // makeHTTPHandler is a helper function that wraps an apiFunc and returns an http.HandlerFunc.
-func makeHTTPHandler(fn apiFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		err := fn(w, r)
+func makeHTTPHandler(fn apiFunc) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		err := fn(c.Writer, c.Request)
 		if err != nil {
-			WriteJSON(w, http.StatusBadRequest, APIError{Error: err.Error()})
+			c.JSON(http.StatusInternalServerError, APIError{Error: err.Error()})
 		}
 	}
 }
@@ -36,43 +39,47 @@ func WriteJSON(w http.ResponseWriter, status int, v interface{}) error {
 	return json.NewEncoder(w).Encode(v)
 }
 
-func NewAPIServer(listenAddr string) *APIServer {
+func NewAPIServer() *APIServer {
 	return &APIServer{
-		listenAddr: listenAddr,
+		engine: gin.Default(),
 	}
 }
 
 func (s *APIServer) Run() error {
-	router := mux.NewRouter()
+	s.engine.GET("/", makeHTTPHandler(s.healthCheck))
 
-	router.HandleFunc("/", makeHTTPHandler(s.healthCheck)).Methods("GET")
-	router.HandleFunc("/health", makeHTTPHandler(s.healthCheck)).Methods("GET")
-	router.HandleFunc("/refill", makeHTTPHandler(s.handleRefill)).Methods("GET")
+	// Log that we're starting the server
 
-	fmt.Printf("Listening on %s\n", s.listenAddr)
-
-	return http.ListenAndServe(s.listenAddr, router)
+	port := os.Getenv("PORT")
+	fmt.Printf("Starting server on port %s\n", port)
+	return s.engine.Run()
 }
 
-func (s *APIServer) handleRefill(w http.ResponseWriter, r *http.Request) error {
-	var refillRequest RefillRequest
-	err := json.NewDecoder(r.Body).Decode(&refillRequest)
-	if err != nil {
-		return err
-	}
+// func(c *gin.Context) {
+// 		c.JSON(200, gin.H{
+// 			"message": "Hello world!",
+// 		})
+// 	}
 
-	result, err := doRefill(refillRequest)
-	if err != nil {
-		return fmt.Errorf("an error occurred while refilling: %w", err)
-	}
+// func (s *APIServer) handleRefill(w http.ResponseWriter, r *http.Request) error {
+// 	var refillRequest RefillRequest
+// 	err := json.NewDecoder(r.Body).Decode(&refillRequest)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	err = WriteJSON(w, http.StatusOK, result)
-	if err != nil {
-		return fmt.Errorf("an error occurred while writing the response: %w", err)
-	}
+// 	result, err := doRefill(refillRequest)
+// 	if err != nil {
+// 		return fmt.Errorf("an error occurred while refilling: %w", err)
+// 	}
 
-	return nil
-}
+// 	err = WriteJSON(w, http.StatusOK, result)
+// 	if err != nil {
+// 		return fmt.Errorf("an error occurred while writing the response: %w", err)
+// 	}
+
+// 	return nil
+// }
 
 func (s *APIServer) healthCheck(w http.ResponseWriter, r *http.Request) error {
 	return WriteJSON(w, http.StatusOK, "API is healthy")
