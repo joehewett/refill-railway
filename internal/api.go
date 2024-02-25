@@ -64,7 +64,7 @@ func NewAPIServer() *APIServer {
 
 func (s *APIServer) Run() error {
 	s.engine.GET("/", makeHTTPHandler(s.healthCheck))
-	s.engine.GET("/refill", makeHTTPHandler(s.handleRefill))
+	s.engine.POST("/refill", makeHTTPHandler(s.handleRefill))
 
 	port := os.Getenv("PORT")
 	fmt.Printf("Starting server on port %s\n", port)
