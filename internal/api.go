@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -44,20 +43,6 @@ func WriteJSON(w http.ResponseWriter, status int, v interface{}) error {
 func NewAPIServer() *APIServer {
 	engine := gin.Default()
 
-	// Add bearer token middleware
-	engine.Use(func(c *gin.Context) {
-		token := os.Getenv("API_KEY")
-		// Check if the request has a valid bearer token
-		// If not, return a 401 Unauthorized response
-		if c.GetHeader("Authorization") != fmt.Sprintf("Bearer %s", token) {
-			c.JSON(http.StatusUnauthorized, APIError{Error: "Unauthorized"})
-			c.Abort()
-			return
-		}
-		// If the token is valid, call c.Next() to continue processing the request
-		c.Next()
-	})
-
 	// Add CORS middleware
 	engine.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"*"}, // Use your specific origin here instead of "*" for production
@@ -65,11 +50,20 @@ func NewAPIServer() *APIServer {
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
-		AllowOriginFunc: func(origin string) bool {
-			return origin == "http://example.com" // Specify the allowed origin
-		},
-		MaxAge: 12 * time.Hour,
 	}))
+
+	// Add bearer token middleware
+	engine.Use(func(c *gin.Context) {
+		// Check if the request has a valid bearer token
+		// If not, return a 401 Unauthorized response
+		if c.GetHeader("Authorization") != "Bearer my-secret-token" {
+			c.JSON(http.StatusUnauthorized, APIError{Error: "Unauthorized"})
+			c.Abort()
+			return
+		}
+		// If the token is valid, call c.Next() to continue processing the request
+		c.Next()
+	})
 
 	return &APIServer{
 		engine,
