@@ -44,6 +44,20 @@ func WriteJSON(w http.ResponseWriter, status int, v interface{}) error {
 func NewAPIServer() *APIServer {
 	engine := gin.Default()
 
+	// Add bearer token middleware
+	engine.Use(func(c *gin.Context) {
+		token := os.Getenv("API_KEY")
+		// Check if the request has a valid bearer token
+		// If not, return a 401 Unauthorized response
+		if c.GetHeader("Authorization") != fmt.Sprintf("Bearer %s", token) {
+			c.JSON(http.StatusUnauthorized, APIError{Error: "Unauthorized"})
+			c.Abort()
+			return
+		}
+		// If the token is valid, call c.Next() to continue processing the request
+		c.Next()
+	})
+
 	// Add CORS middleware
 	engine.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"*"}, // Use your specific origin here instead of "*" for production
