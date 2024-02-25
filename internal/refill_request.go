@@ -76,7 +76,7 @@ func fill(file string, jsonStr string, instructions string, ch chan string) {
 
 	}
 
-	resultJSON["filename"] = "file.Name()"
+	// resultJSON["filename"] = "file.Name()"
 	bytes, err := json.MarshalIndent(resultJSON, "", "\t")
 	if err != nil {
 		ch <- fmt.Sprintf("\nFailed to marshal result for file %s: %s\n", file, err)
