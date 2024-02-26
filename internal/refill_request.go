@@ -3,20 +3,28 @@ package internal
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"time"
 )
 
 type RefillRequest struct {
-	Keys         []string `json:"json"`
+	Keys         []string `json:"keys"`
 	Data         []string `json:"data"`
 	Instructions string   `json:"instructions"`
+	OpenAIKey    string   `json:"openai_api_key"`
 }
 
 func doRefill(request RefillRequest) (string, error) {
+	if request.OpenAIKey == "" {
+		return "", fmt.Errorf("OpenAI API key is required")
+	}
+
+	request.OpenAIKey = getAdminKey(request.OpenAIKey)
+
 	// Convert the array of strings into a JSON object where each string is a key and each value is an empty string
 	jsonSkeleton := make(map[string]interface{})
 	for _, key := range request.Keys {
-		jsonSkeleton[key] = ""
+		jsonSkeleton[key] = key
 	}
 
 	// Convert the JSON object back into a string
@@ -33,7 +41,7 @@ func doRefill(request RefillRequest) (string, error) {
 	ch := make(chan string)
 
 	for _, file := range request.Data {
-		go fill(file, string(jsonStr), request.Instructions, ch)
+		go fill(file, string(jsonStr), request.Instructions, request.OpenAIKey, ch)
 	}
 
 	results := []string{}
@@ -56,12 +64,12 @@ func doRefill(request RefillRequest) (string, error) {
 	return result, nil
 }
 
-func fill(file string, jsonStr string, instructions string, ch chan string) {
+func fill(file string, jsonStr string, instructions string, openAIKey string, ch chan string) {
 	startTime := time.Now()
 
 	fmt.Println("Requesting filled data from LM")
 
-	result, err := requestFill(file, jsonStr, instructions)
+	result, err := requestFill(file, jsonStr, instructions, openAIKey)
 	if err != nil {
 		ch <- fmt.Sprintf("\nFailed to request fill for file %s: %s\n", file, err)
 		return
@@ -86,4 +94,13 @@ func fill(file string, jsonStr string, instructions string, ch chan string) {
 	ch <- string(bytes)
 
 	fmt.Printf("Time taken for file %s: %s\n", file, time.Since(startTime))
+}
+
+// getAdminKey returns the OpenAI API key if the given key is the admin key.
+func getAdminKey(key string) string {
+	if key == os.Getenv("ADMIN_KEY") {
+		return os.Getenv("OPENAI_API_KEY")
+	}
+
+	return key
 }

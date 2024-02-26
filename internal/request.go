@@ -3,7 +3,6 @@ package internal
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/sashabaranov/go-openai"
 )
@@ -31,17 +30,10 @@ var (
 	filledJSONTagPrompt = `
 		[Filled JSON structure]
 	`
-	openAIKey = os.Getenv("OPENAI_API_KEY")
-	model     = openai.GPT3Dot5Turbo16K0613
+	model = openai.GPT3Dot5Turbo
 )
 
-func requestFill(file string, json string, instructions string) (string, error) {
-	// Get the actual data from the file
-	// data, err := file.Load()
-	// if err != nil {
-	// 	return "", fmt.Errorf("failed to load file: %w", err)
-	// }
-
+func requestFill(file string, json string, instructions string, openAIKey string) (string, error) {
 	var messages = []openai.ChatCompletionMessage{
 		{
 			Role:    openai.ChatMessageRoleSystem,
@@ -85,15 +77,21 @@ func requestFill(file string, json string, instructions string) (string, error) 
 	}
 	messages = append(messages, others...)
 
-	completion, err := createChatCompletion(messages)
+	for _, message := range messages {
+		fmt.Printf("%s: %s\n", message.Role, message.Content)
+	}
+
+	completion, err := createChatCompletion(messages, openAIKey)
 	if err != nil {
 		return "", fmt.Errorf("failed to create chat completion: %w", err)
 	}
 
+	fmt.Printf("Completion: %s\n", completion)
+
 	return completion, nil
 }
 
-func createChatCompletion(messages []openai.ChatCompletionMessage) (string, error) {
+func createChatCompletion(messages []openai.ChatCompletionMessage, openAIKey string) (string, error) {
 	if openAIKey == "" {
 		return "", fmt.Errorf("OPENAI_API_KEY is not set")
 	}

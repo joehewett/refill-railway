@@ -51,24 +51,8 @@ func NewAPIServer() *APIServer {
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
-		AllowOriginFunc: func(origin string) bool {
-			return origin == "http://localhost" // Specify the allowed origin
-		},
-		MaxAge: 12 * time.Hour,
+		MaxAge:           12 * time.Hour,
 	}))
-
-	// Add bearer token middleware
-	engine.Use(func(c *gin.Context) {
-		// Check if the request has a valid bearer token
-		// If not, return a 401 Unauthorized response
-		if c.GetHeader("Authorization") != "Bearer my-secret-token" {
-			c.JSON(http.StatusUnauthorized, APIError{Error: "Unauthorized: invalid token"})
-			c.Abort()
-			return
-		}
-		// If the token is valid, call c.Next() to continue processing the request
-		c.Next()
-	})
 
 	return &APIServer{
 		engine,
@@ -86,6 +70,9 @@ func (s *APIServer) Run() error {
 
 func (s *APIServer) handleRefill(w http.ResponseWriter, r *http.Request) error {
 	var refillRequest RefillRequest
+
+	fmt.Printf("Body is %v\n", r.Body)
+
 	err := json.NewDecoder(r.Body).Decode(&refillRequest)
 	if err != nil {
 		return fmt.Errorf("failed to decode refill request: %s", err)
