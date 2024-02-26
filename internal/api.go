@@ -45,11 +45,12 @@ func NewAPIServer() *APIServer {
 
 	// Add CORS middleware
 	engine.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"*"}, // Use your specific origin here instead of "*" for production
+		AllowOrigins:     []string{"*"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
+		MaxAge:           12 * 3600,
 	}))
 
 	// Add bearer token middleware
@@ -57,7 +58,7 @@ func NewAPIServer() *APIServer {
 		// Check if the request has a valid bearer token
 		// If not, return a 401 Unauthorized response
 		if c.GetHeader("Authorization") != "Bearer my-secret-token" {
-			c.JSON(http.StatusUnauthorized, APIError{Error: "Unauthorized"})
+			c.JSON(http.StatusUnauthorized, APIError{Error: "Unauthorized: invalid token"})
 			c.Abort()
 			return
 		}
