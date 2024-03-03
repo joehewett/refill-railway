@@ -68,7 +68,7 @@ func requestFill(file string, json string, instructions string, openAIKey string
 		},
 		{
 			Role:    openai.ChatMessageRoleSystem,
-			Content: file,
+			Content: string(file),
 		},
 		{
 			Role:    openai.ChatMessageRoleSystem,

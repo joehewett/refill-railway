@@ -9,7 +9,7 @@ import (
 
 type RefillRequest struct {
 	Keys         []string `json:"keys"`
-	Data         []string `json:"data"`
+	Files        []File   `json:"files"`
 	Instructions string   `json:"instructions"`
 	OpenAIKey    string   `json:"openai_api_key"`
 }
@@ -40,12 +40,12 @@ func doRefill(request RefillRequest) (string, error) {
 
 	ch := make(chan string)
 
-	for _, file := range request.Data {
+	for _, file := range request.Files {
 		go fill(file, string(jsonStr), request.Instructions, request.OpenAIKey, ch)
 	}
 
 	results := []string{}
-	for range request.Data {
+	for range request.Files {
 		results = append(results, <-ch)
 	}
 
@@ -64,14 +64,14 @@ func doRefill(request RefillRequest) (string, error) {
 	return result, nil
 }
 
-func fill(file string, jsonStr string, instructions string, openAIKey string, ch chan string) {
+func fill(file File, jsonStr string, instructions string, openAIKey string, ch chan string) {
 	startTime := time.Now()
 
 	fmt.Println("Requesting filled data from LM")
 
-	result, err := requestFill(file, jsonStr, instructions, openAIKey)
+	result, err := requestFill(file.Data, jsonStr, instructions, openAIKey)
 	if err != nil {
-		ch <- fmt.Sprintf("\nFailed to request fill for file %s: %s\n", file, err)
+		ch <- fmt.Sprintf("\nFailed to request fill for file: %sz\n", err)
 		return
 	}
 
